@@ -11,7 +11,7 @@ def Login(request):
     try:
         username = request.POST.get('username')
         password = request.POST.get('password')
-        
+
         user = authenticate(username=username, password=password)
 
         if user is not None:
@@ -25,7 +25,7 @@ def Login(request):
 
     except Exception as e:
         return Response({"error":str(e)}, status=500)
-    
+
 
 
 @api_view(['POST'])
@@ -40,5 +40,5 @@ def Register(request):
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-    
+
 
