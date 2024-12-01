@@ -1,0 +1,41 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>Dashboard</h2>
+            <ul>
+                <li><a href="{% url 'create_employee' %}">Create Employee</a></li>
+                <li><a href="{% url 'list_employee' %}">List Employees</a></li>
+                <li><a href="{% url 'CreateCustomField' %}">Custom Fields</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <header>
+                <h1>Employee Management Dashboard</h1>
+            </header>
+
+            <div class="content">
+                {% block content %}
+                <!-- Dynamic content will be inserted here -->
+                {% endblock %}
+            </div>
+
+            <footer>
+                <p>&copy; 2024 Employee Dashboard</p>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>

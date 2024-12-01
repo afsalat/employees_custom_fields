@@ -1,0 +1,111 @@
+/* static/css/dashboard.css */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7fc;
+}
+
+.dashboard-container {
+    padding: 20px;
+}
+
+.dashboard-header {
+    background-color: #007bff;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-header h1 {
+    font-size: 2.5em;
+    margin: 0;
+}
+
+.dashboard-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+    list-style-type: none;
+    padding: 0;
+}
+
+.dashboard-nav li {
+    margin: 0 20px;
+}
+
+.dashboard-nav li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.2em;
+    transition: color 0.3s ease;
+}
+
+.dashboard-nav li a:hover {
+    color: #ffcb05;
+    text-decoration: underline;
+}
+
+.dashboard-main {
+    margin-top: 40px;
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-main h2 {
+    font-size: 2em;
+    color: #333;
+}
+
+.dashboard-main p {
+    font-size: 1.2em;
+    color: #555;
+    line-height: 1.6;
+    margin-top: 15px;
+}
+
+/* Field Options Styles */
+.fields-container {
+    display: flex;
+    margin-top: 30px;
+    justify-content: space-between;
+}
+
+.field-options {
+    width: 45%;
+    background-color: #f1f1f1;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.field-option {
+    padding: 10px;
+    margin: 10px 0;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+.empty-div {
+    width: 45%;
+    background-color: #f1f1f1;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    min-height: 300px;
+}
+
+.empty-div h3 {
+    text-align: center;
+    color: #333;
+    font-size: 1.5em;
+}

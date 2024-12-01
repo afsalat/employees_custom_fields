@@ -1,0 +1,11 @@
+{% extends 'dashboard/dashboard.html' %}
+
+{% block content %}
+<h2>Employee List</h2>
+<ul>
+    {% for employee in employees %}
+        <li>{{ employee.emp_name }} - {{ employee.emp_contact }}</li>
+    {% endfor %}
+</ul>
+<a href="{% url 'create_employee' %}">Create New Employee</a>
+{% endblock %}

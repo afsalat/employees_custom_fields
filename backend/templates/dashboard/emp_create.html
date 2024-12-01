@@ -1,0 +1,11 @@
+{% extends 'dashboard/dashboard.html' %}
+
+{% block content %}
+<h2>Create Employee</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+</form>
+<a href="{% url 'list_employee' %}">Back to Employee List</a>
+{% endblock %}

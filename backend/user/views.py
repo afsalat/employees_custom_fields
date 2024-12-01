@@ -1,44 +1,49 @@
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
+from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth.forms import AuthenticationForm
 
+# Registration View
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Account created for {username}!')
+            return redirect('login')
+    else:
+        form = UserCreationForm()
+    return render(request, 'auth/register.html', {'form': form})
 
-
-@api_view(['POST'])
-def Login(request):
-    try:
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
-            return Response({"refresh":str(refresh),
-                            'access': str(refresh.access_token),
-                            'status': 'success'
-                            })
+# Login View
+def login(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f'Welcome back, {username}!')
+                return redirect('dashboard')  # Redirect to dashboard after login
+            else:
+                messages.error(request, 'Invalid username or password')
         else:
-            return Response({"error":"Invalid credentials"}, status=400)
+            messages.error(request, 'Invalid username or password')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'auth/login.html', {'form': form})
 
-    except Exception as e:
-        return Response({"error":str(e)}, status=500)
-
-
-
-@api_view(['POST'])
-def Register(request):
-    try:
-        user = UserCreationForm(request.POST)
-        if user.is_valid():
-            user.save()
-            return Response({'message':"successfully registered!!!"}, status=200)
-        else:
-            return Response({'message':"Please check the details"}, status=400)
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+# Logout View
+def logout(request):
+    logout(request)
+    messages.info(request, 'You have been logged out.')
+    return redirect('login')
 
 
+def dashboard(request):
+
+    return render(request, 'dashboard/dashboard.html')
