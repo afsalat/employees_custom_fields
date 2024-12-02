@@ -1,11 +1,15 @@
 {% extends 'dashboard/dashboard.html' %}
 
 {% block content %}
-<h2>Create Employee</h2>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Save</button>
+    {% for field in custom_fields %}
+        <label>{{ field.field_name }}</label>
+        <input type="{{ field.type }}" name="custom_field_{{ field.id }}" />
+        <br>
+        <br>
+    {% endfor %}
+    <button type="submit">Create Employee</button>
 </form>
-<a href="{% url 'list_employee' %}">Back to Employee List</a>
-{% endblock %}
+{% endblock content %}

@@ -1,11 +1,41 @@
 {% extends 'dashboard/dashboard.html' %}
 
 {% block content %}
-<h2>Employee List</h2>
-<ul>
-    {% for employee in employees %}
-        <li>{{ employee.emp_name }} - {{ employee.emp_contact }}</li>
-    {% endfor %}
-</ul>
-<a href="{% url 'create_employee' %}">Create New Employee</a>
+    <h2>Employee List</h2>
+
+    <pre>{{ employees }}</pre>  <!-- Print raw data for debugging -->
+
+    {% if employees %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Employee Name</th>
+                    <th>Contact</th>
+                    <th>Custom Fields</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in employees %}
+                    <tr>
+                        <td>{{ employee.emp_name }}</td>
+                        <td>{{ employee.emp_contact }}</td>
+                        <td>
+                            <ul>
+                                {% for field, data in employee.items %}
+                                    <!-- Check if the field is dynamic by matching its name -->
+                                    {% if field %}
+                                        <li><strong>{{ data.field_name }}:</strong> {{ data.value }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No employees found.</p>
+    {% endif %}
+
+    <a href="{% url 'create_employee' %}">Create New Employee</a>
 {% endblock %}

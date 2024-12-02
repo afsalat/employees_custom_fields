@@ -1,57 +1,86 @@
+import json
+import traceback
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Employee
 from customfields.models import CustomFieldData, Customfields
+from django.shortcuts import render, redirect
+from .models import Employee
+from .forms import EmployeeForm  # Assuming you have a form for basic employee data
 
-# Create Employee view (Using GET and POST for the form submission)
 def create_employee(request):
     if request.method == 'POST':
         try:
-            name = request.POST.get('name')
-            contact = request.POST.get('contact')
-            # Add other fields as needed
-            # Create the employee
-            employee = Employee.objects.create(emp_name=name, emp_contact=contact)
+            # Handle basic fields
+            form = EmployeeForm(request.POST)
+            if form.is_valid():
+                employee = form.save()  # Save basic employee fields
 
-            # Handle custom fields if any
-            custom_fields = request.POST.getlist('custom_fields')  # Assuming custom fields are passed as a list
-            for field_data in custom_fields:
-                # Assuming custom_fields contains field_id and value in some format
-                field_id, value = field_data.split(':')  # Example: field_id:value
-                CustomFieldData.objects.create(employee=employee, field_id=field_id, value=value)
+                # Handle custom fields
+                custom_fields_data = json.loads(request.POST.get('custom_fields', '[]'))
+                for field_data in custom_fields_data:
+                    field_id = field_data.get('field_id')
+                    value = field_data.get('value')
+                    
+                    if field_id and value:
+                        CustomFieldData.objects.create(
+                            employee=employee,
+                            field_id=field_id,
+                            value=value
+                        )
 
-            return redirect('employee_list')  # Redirect to employee list after creating
+                return redirect('view_all_employees')  # Redirect to employee list
+            else:
+                return render(request, 'dashboard/emp_create.html', {'form': form, 'error': form.errors})
 
         except Exception as e:
-            return render(request, 'dashboard/emp_create.html', {'error': str(e)})
+            return render(request, 'dashboard/emp_create.html', {'form': EmployeeForm(), 'error': str(e)})
 
-    # If GET request, render employee creation form
-    return render(request, 'dashboard/emp_create.html')
+    # Render the form with available custom fields
+    form = EmployeeForm()
+    custom_fields = Customfields.objects.all()
+    return render(request, 'dashboard/emp_create.html', {'form': form, 'custom_fields': custom_fields})
 
 
-# View All Employees (GET request)
+
+
+
 def view_all_employees(request):
     try:
         employee_list = Employee.objects.all()
+        print(f"Employee list: {employee_list}")  # Debug print
 
         if not employee_list:
             return render(request, 'dashboard/emp_list.html', {"message": "No employees found"})
 
         employee_data = []
         for employee in employee_list:
-            employee_info = {"id": employee.id, "name": employee.name, "position": employee.position}
-            dynamic_field_data = CustomFieldData.objects.filter(employee=employee)
+            print(f"Processing employee: {employee.emp_name}")  # Debug print
+            employee_info = {"id": employee.id, "emp_name": employee.emp_name, "emp_contact": employee.emp_contact}
+            print(employee.id)
+            
+            # Adjusted the query to use the correct field name for filtering
+            dynamic_field_data = CustomFieldData.objects.filter(employee_id=employee.id)  # Assuming 'employee_id' is the correct field
+            print(f"Dynamic field data: {dynamic_field_data}")  # Debug print
+            
+            if not dynamic_field_data:
+                continue  # Skip if no custom fields for this employee
 
             for field_data in dynamic_field_data:
                 field = Customfields.objects.get(id=field_data.field_id)
-                employee_info[f"field_{field.id}"] = {"field_name": field.name, "value": field_data.value}
+                field_name = f"field_{field.id}"
+                employee_info[field_name] = {"field_name": field.field_name, "value": field_data.value}
 
             employee_data.append(employee_info)
-            print(employee_info)
+            print(employee_data)
 
         return render(request, 'dashboard/emp_list.html', {"employees": employee_data})
 
     except Exception as e:
+        print(f"Error: {str(e)}")  # Debug print for any exceptions
+        print("----",traceback.format_exc())
         return render(request, 'dashboard/emp_list.html', {'error': str(e)})
+
+
 
 
 # Delete Employee (Using employee_id)

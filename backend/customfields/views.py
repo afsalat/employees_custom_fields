@@ -6,38 +6,53 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CustomFieldCreation
 from .models import Customfields
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
+from .models import Customfields  # Replace with your actual model import
+from .forms import CustomFieldCreation  # Replace with your actual form import
+import json
+from django.core.exceptions import ValidationError
 
-@csrf_exempt  # This is to bypass CSRF verification for now (consider adding CSRF handling if needed)
+import logging
+
+logger = logging.getLogger(__name__)  # Configure this in your settings
+
+@csrf_exempt
 def create_custom_field(request):
     if request.method == 'POST':
         try:
-            # Get the JSON data from the request
             data = json.loads(request.body)
+            fields = data.get('fields', [])
 
-            # Loop through each field in the data and create the corresponding custom field
-            for field in data.get('fields', []):
-                # Assuming 'label' and 'field_type' are the keys for field data
+            if not fields:
+                return JsonResponse({'success': False, 'error': 'No fields provided'}, status=400)
+
+            for field in fields:
                 label = field.get('label')
                 field_type = field.get('field_type')
-                options = field.get('options', '')  # Options will be a comma-separated string if it's a select field
+                options = field.get('options', '')
 
-                # Create a new CustomField instance (replace CustomField with your actual model)
-                new_field = CustomField(
-                    label=label,
+                if not label or not field_type:
+                    return JsonResponse({'success': False, 'error': 'Label and field type are required'}, status=400)
+
+                new_field = Customfields(
+                    field_name=label,
                     field_type=field_type,
-                    options=options
+                    is_required="yes"
                 )
+                new_field.full_clean()
                 new_field.save()
 
-            # Respond with success
-            return JsonResponse({'success': True}, status=200)
-
+            return JsonResponse({'success': True, 'message': 'Fields created successfully'}, status=201)
+        
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            logger.error("Unhandled exception: %s", str(e))
+            return JsonResponse({'success': False, 'error': 'Server error'}, status=500)
 
-    # Handle GET or other requests (can be modified based on your needs)
-    form = CustomFieldCreation()
-    return render(request, 'dashboard/customfield.html', {'form': form})
+    return render(request, 'dashboard/customfield.html')
+
+
 
 
 # Update Custom Field view

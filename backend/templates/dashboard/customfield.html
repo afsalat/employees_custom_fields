@@ -6,13 +6,14 @@
     <!-- Field options -->
     <div class="field-options">
         <h3>Field Options</h3>
-        <div class="field-option" draggable="true" id="employee-name">Number</div>
-        <div class="field-option" draggable="true" id="employee-id">Text</div>
-        <div class="field-option" draggable="true" id="department">Date</div>
+        <div class="field-option" draggable="true" id="text">Text</div>
+        <div class="field-option" draggable="true" id="number">Number</div>
         <div class="field-option" draggable="true" id="password">Password</div>
+        <div class="field-option" draggable="true" id="email">Email</div>
+        <div class="field-option" draggable="true" id="date">Date</div>
     </div>
 
-    <!-- Empty div to drop fields -->
+    <!-- Drop zone for fields -->
     <div class="empty-div">
         <h3>Drag Fields Here</h3>
     </div>
@@ -21,85 +22,65 @@
 <!-- Save Button -->
 <button id="save-btn">Save Fields</button>
 
+<!-- Hidden Input to Store CSRF Token -->
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
 <script>
+    // Function to get CSRF token
+    function getCsrfToken() {
+        const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        return csrfTokenInput ? csrfTokenInput.value : '';
+    }
+
+    // Save button click handler
     document.getElementById('save-btn').addEventListener('click', () => {
-        // Collect the data from the dropped fields
         const fields = document.querySelectorAll('.field-container');
         const fieldData = [];
 
         fields.forEach(field => {
-            // Get the label text, with fallback if no label is found
-            const label = field.querySelector('label') ? field.querySelector('label').textContent : 'Unnamed Field';
+            const label = field.querySelector('.label-input').value;
+            const inputType = field.dataset.type;
 
-            // Get the input or select element within the field
-            const input = field.querySelector('input') || field.querySelector('select');
-
-            // If neither input nor select is found, log an error and skip this field
-            if (!input) {
-                console.error('No input or select found in the field');
-                return; // Skip this field
-            }
-
-            const fieldType = input.tagName.toLowerCase();  // 'input' or 'select'
-
-            let options = '';
-            if (fieldType === 'select') {
-                // Gather the selected options for a select field
-                options = Array.from(input.options)
-                    .map(option => option.value)
-                    .join(',');
-            }
-
-            // Push the field data to the array
             fieldData.push({
                 label: label,
-                field_type: fieldType,
-                options: options,
+                field_type: inputType,
             });
         });
 
-        // Send the data to Django using AJAX
         fetch('http://127.0.0.1:8000/create-custom-field/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken(),  // CSRF token for security
+                'X-CSRFToken': getCsrfToken(),
             },
             body: JSON.stringify({ fields: fieldData }),
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                alert('Fields saved successfully!');
-            } else {
-                alert('Error saving fields');
-            }
+            // Display feedback below
+            displayFeedback(data.success ? 'Fields saved successfully!' : 'Error saving fields.');
         })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while saving the fields');
+        .catch(() => {
+            displayFeedback('An error occurred while saving the fields.');
         });
     });
 
-    // Get CSRF token (for security)
-    function getCsrfToken() {
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        return csrfToken;
+    // Function to show feedback message
+    function displayFeedback(message) {
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.classList.add('feedback');
+        feedbackDiv.textContent = message;
+        document.body.appendChild(feedbackDiv);
+        setTimeout(() => feedbackDiv.remove(), 3000); // Automatically remove after 3 seconds
     }
 
-    // Select all draggable field options and the empty div
+    // Drag-and-drop logic
     const fields = document.querySelectorAll('.field-option');
     const emptyDiv = document.querySelector('.empty-div');
 
-    // Add dragstart event listener to each field option
     fields.forEach(field => {
-        field.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', field.textContent);
+        field.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/plain', field.id);
             field.classList.add('dragging');
         });
 
@@ -108,50 +89,31 @@
         });
     });
 
-    // Allow the empty div to accept dragged items
-    emptyDiv.addEventListener('dragover', (e) => {
-        e.preventDefault();
-    });
+    emptyDiv.addEventListener('dragover', e => e.preventDefault());
 
-    emptyDiv.addEventListener('drop', (e) => {
+    emptyDiv.addEventListener('drop', e => {
         e.preventDefault();
-        const data = e.dataTransfer.getData('text/plain');
+        const fieldType = e.dataTransfer.getData('text/plain');
 
-        // Create a container for the dropped field with label and input
+        // Create field container
         const fieldContainer = document.createElement('div');
         fieldContainer.classList.add('field-container');
+        fieldContainer.dataset.type = fieldType;
 
-        // Create the label and input based on the field name
-        const label = document.createElement('label');
-        label.textContent = data;
+        // Label input for the field
+        const labelInput = document.createElement('input');
+        labelInput.type = 'text';
+        labelInput.classList.add('label-input');
+        labelInput.placeholder = `Label for ${fieldType}`;
 
-        let input;
-        if (data === "Department") {
-            input = document.createElement('select');
-            const option1 = document.createElement('option');
-            option1.value = "HR";
-            option1.textContent = "HR";
-            const option2 = document.createElement('option');
-            option2.value = "Engineering";
-            option2.textContent = "Engineering";
-            input.appendChild(option1);
-            input.appendChild(option2);
-        } else if (data === "Date") {
-            input = document.createElement('input');
-            input.type = "date";
-        } else if (data === "Password") {
-            input = document.createElement('input');
-            input.type = "password";
-        } else {
-            input = document.createElement('input');
-            input.type = "text";
-        }
+        // Input field
+        const input = document.createElement('input');
+        input.type = fieldType;
+        input.disabled = true; // To show the type but keep it non-editable
 
-        // Append the label and input to the field container
-        fieldContainer.appendChild(label);
+        fieldContainer.appendChild(labelInput);
         fieldContainer.appendChild(input);
 
-        // Append the field container to the empty div
         emptyDiv.appendChild(fieldContainer);
     });
 </script>
@@ -193,22 +155,26 @@
 
     .field-container {
         display: flex;
-        justify-content: space-between;
+        gap: 10px;
         margin: 10px 0;
         width: 100%;
+        align-items: center;
     }
 
-    .field-container label {
+    .label-input {
         width: 30%;
-        font-weight: bold;
-    }
-
-    .field-container input, .field-container select {
-        width: 60%;
         padding: 5px;
         border-radius: 3px;
         border: 1px solid #ccc;
     }
-</style>
 
+    .feedback {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #28a745;
+        color: white;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+</style>
 {% endblock %}
